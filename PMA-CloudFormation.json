@@ -77,6 +77,33 @@
                 "Domain": "vpc"
             }
         },
+        "Role": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "1",
+                            "Effect": "Allow",
+                            "Action": "ec2:*",
+                            "Resource": "*"
+                        },
+                        {
+                            "Sid": "1",
+                            "Effect": "Allow",
+                            "Action": [
+                                "logs:CreateLogGroup",
+                                "logs:CreateLogStream",
+                                "logs:PutLogEvents",
+                                "logs:DescribeLogStreams"
+                            ],
+                            "Resource": "arn:aws:logs:*:*:*"
+                        }
+                    ]
+                }
+            }
+        },
         "eni0da401890946f676c": {
             "Type": "AWS::EC2::NetworkInterface",
             "Properties": {
