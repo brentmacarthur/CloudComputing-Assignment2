@@ -1,0 +1,434 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "phpMyAdmin EC2",
+    "Resources": {
+        "vpcfeb2a199": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": "172.31.0.0/16",
+                "InstanceTenancy": "default",
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true"
+            }
+        },
+        "subnet0a889651": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "CidrBlock": "172.31.0.0/20",
+                "AvailabilityZone": "us-west-1a",
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                }
+            }
+        },
+        "subnet3572b053": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "CidrBlock": "172.31.16.0/20",
+                "AvailabilityZone": "us-west-1b",
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                }
+            }
+        },
+        "igw0851b9fec325798db": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "phpMyAdmin"
+                    }
+                ]
+            }
+        },
+        "igw346f7f50": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {}
+        },
+        "dopt44979523": {
+            "Type": "AWS::EC2::DHCPOptions",
+            "Properties": {
+                "DomainName": "us-west-1.compute.internal",
+                "DomainNameServers": [
+                    "AmazonProvidedDNS"
+                ]
+            }
+        },
+        "acl0362ce65": {
+            "Type": "AWS::EC2::NetworkAcl",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                }
+            }
+        },
+        "rtbc3b53ba5": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                }
+            }
+        },
+        "eip1352132128": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "eni0da401890946f676c": {
+            "Type": "AWS::EC2::NetworkInterface",
+            "Properties": {
+                "Description": "RDSNetworkInterface",
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Ref": "subnet3572b053"
+                },
+                "PrivateIpAddresses": [
+                    {
+                        "PrivateIpAddress": "172.31.21.182",
+                        "Primary": "true"
+                    }
+                ],
+                "GroupSet": [
+                    {
+                        "Ref": "sgmycomputers"
+                    },
+                    {
+                        "Ref": "sgwebserversec"
+                    }
+                ]
+            }
+        },
+        "instancei018448d1f2cb73bb5": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "DisableApiTermination": "false",
+                "InstanceInitiatedShutdownBehavior": "stop",
+                "ImageId": "ami-0dbf5ea29a7fc7e05",
+                "InstanceType": "t2.micro",
+                "KeyName": "webserver",
+                "Monitoring": "false",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "phpmyadmin"
+                    }
+                ],
+                "NetworkInterfaces": [
+                    {
+                        "DeleteOnTermination": "true",
+                        "DeviceIndex": 0,
+                        "SubnetId": {
+                            "Ref": "subnet0a889651"
+                        },
+                        "PrivateIpAddresses": [
+                            {
+                                "PrivateIpAddress": "172.31.12.31",
+                                "Primary": "true"
+                            }
+                        ],
+                        "GroupSet": [
+                            {
+                                "Ref": "sgmycomputers"
+                            },
+                            {
+                                "Ref": "sgwebserversec"
+                            }
+                        ],
+                        "AssociatePublicIpAddress": "true"
+                    }
+                ]
+            }
+        },
+        "rdsnorthwind1": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+                "AllocatedStorage": "20",
+                "AllowMajorVersionUpgrade": "false",
+                "AutoMinorVersionUpgrade": "true",
+                "DBInstanceClass": "db.t2.micro",
+                "Port": "3306",
+                "PubliclyAccessible": "true",
+                "StorageType": "gp2",
+                "BackupRetentionPeriod": "7",
+                "MasterUsername": "bmacarthur",
+                "MasterUserPassword": "MyPassword",
+                "PreferredBackupWindow": "09:59-10:29",
+                "PreferredMaintenanceWindow": "mon:11:52-mon:12:22",
+                "DBName": "MyDatabase",
+                "Engine": "mysql",
+                "EngineVersion": "5.7.26",
+                "LicenseModel": "general-public-license",
+                "DBSubnetGroupName": {
+                    "Ref": "dbsubnetdefaultvpcfeb2a199"
+                },
+                "VPCSecurityGroups": [
+                    {
+                        "Ref": "sgwebserversec"
+                    },
+                    {
+                        "Ref": "sgmycomputers"
+                    }
+                ]
+            }
+        },
+        "s3rseg176bmacarthur": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "Private",
+                "VersioningConfiguration": {
+                    "Status": "Enabled"
+                }
+            }
+        },
+        "dbsubnetdefaultvpcfeb2a199": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Properties": {
+                "DBSubnetGroupDescription": "Created from the RDS Management Console",
+                "SubnetIds": [
+                    {
+                        "Ref": "subnet3572b053"
+                    },
+                    {
+                        "Ref": "subnet0a889651"
+                    }
+                ]
+            }
+        },
+        "sgwebserversec": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "webserver security",
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                }
+            }
+        },
+        "sgmycomputers": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Created by RDS management console",
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                }
+            }
+        },
+        "sgPMACreateWebServerSecurityGroupKVR9Z88PBTJ9": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable HTTPS access via port 443",
+                "VpcId": "vpc-065f7ffce07b0c888",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "phpMyAdmin"
+                    }
+                ]
+            }
+        },
+        "dbsgdefault": {
+            "Type": "AWS::RDS::DBSecurityGroup",
+            "Properties": {
+                "GroupDescription": "default"
+            }
+        },
+        "acl1": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "CidrBlock": "0.0.0.0/0",
+                "Egress": "true",
+                "Protocol": "-1",
+                "RuleAction": "allow",
+                "RuleNumber": "100",
+                "NetworkAclId": {
+                    "Ref": "acl0362ce65"
+                }
+            }
+        },
+        "acl2": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "CidrBlock": "0.0.0.0/0",
+                "Protocol": "-1",
+                "RuleAction": "allow",
+                "RuleNumber": "100",
+                "NetworkAclId": {
+                    "Ref": "acl0362ce65"
+                }
+            }
+        },
+        "subnetacl1": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "acl0362ce65"
+                },
+                "SubnetId": {
+                    "Ref": "subnet3572b053"
+                }
+            }
+        },
+        "subnetacl2": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "acl0362ce65"
+                },
+                "SubnetId": {
+                    "Ref": "subnet0a889651"
+                }
+            }
+        },
+        "gw1": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": "vpc-065f7ffce07b0c888",
+                "InternetGatewayId": {
+                    "Ref": "igw0851b9fec325798db"
+                }
+            }
+        },
+        "gw2": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                },
+                "InternetGatewayId": {
+                    "Ref": "igw346f7f50"
+                }
+            }
+        },
+        "route1": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "RouteTableId": {
+                    "Ref": "rtbc3b53ba5"
+                },
+                "GatewayId": {
+                    "Ref": "igw346f7f50"
+                }
+            },
+            "DependsOn": "gw2"
+        },
+        "dchpassoc1": {
+            "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "vpcfeb2a199"
+                },
+                "DhcpOptionsId": {
+                    "Ref": "dopt44979523"
+                }
+            }
+        },
+        "ingress1": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgwebserversec"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "80",
+                "ToPort": "80",
+                "CidrIp": "0.0.0.0/0"
+            }
+        },
+        "ingress2": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgwebserversec"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "22",
+                "ToPort": "22",
+                "CidrIp": "0.0.0.0/0"
+            }
+        },
+        "ingress3": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgwebserversec"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "3306",
+                "ToPort": "3306",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgmycomputers"
+                },
+                "SourceSecurityGroupOwnerId": "733023008522"
+            }
+        },
+        "ingress4": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgwebserversec"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "443",
+                "ToPort": "443",
+                "CidrIp": "0.0.0.0/0"
+            }
+        },
+        "ingress5": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgmycomputers"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "3306",
+                "ToPort": "3306",
+                "CidrIp": "76.103.164.20/32"
+            }
+        },
+        "ingress6": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgPMACreateWebServerSecurityGroupKVR9Z88PBTJ9"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "443",
+                "ToPort": "443",
+                "CidrIp": "0.0.0.0/0"
+            }
+        },
+        "egress1": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgwebserversec"
+                },
+                "IpProtocol": "-1",
+                "CidrIp": "0.0.0.0/0"
+            }
+        },
+        "egress2": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgmycomputers"
+                },
+                "IpProtocol": "-1",
+                "CidrIp": "0.0.0.0/0"
+            }
+        },
+        "egress3": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgPMACreateWebServerSecurityGroupKVR9Z88PBTJ9"
+                },
+                "IpProtocol": "-1",
+                "CidrIp": "0.0.0.0/0"
+            }
+        }
+    },
+}
