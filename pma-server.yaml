@@ -33,6 +33,8 @@ Resources:
       SubnetId: !Ref Subnet
       NetworkInterfaces:
         - SubnetId: !Ref Subnet
+          DeleteOnTermination: "true"
+          DeviceIndex: "0"
           PrivateIpAddresses:
             - PrivateIpAddress: "172.31.12.31"
               Primary: "true"
