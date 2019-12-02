@@ -41,14 +41,28 @@ Resources:
             - !Ref sgwebserversec
           AssociatePublicIpAddress: "true"
       UserData:
+        # From https://github.com/andrewpuch/phpmyadmin_connect_to_rds
         "Fn::Base64": !Sub |
-          #!/bin/bash -x
-          export IPSEC_PSK="${IPSecSharedSecret}"
-          export VPN_USER="${VPNUser}"
-          export VPN_PASSWORD="${VPNPassword}"
-          curl -s https://raw.githubusercontent.com/AWSinAction/code2/master/chapter05/vpn-setup.sh | bash -ex
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2Instance --region ${AWS::Region}
-
+          #!/bin/bash -xe
+          apt-get update
+          apt-get upgrade -y
+          apt-get dist-upgrade -y
+          apt-get autoremove -y
+          apt-get install apache2 php7.0 php7.0-cli php7.0-fpm php7.0-gd php-ssh2 libapache2-mod-php7.0 php7.0-mcrypt mysql-server php7.0-mysql git unzip zip postfix php7.0-curl mailutils php7.0-json phpmyadmin -y
+          php5enmod mcrypt
+          echo 'Include /etc/phpmyadmin/apache.conf' >> /etc/apache2/sites-enabled/000-default.conf
+          service apache2 restart
+          echo '' >> /etc/phpmyadmin/config.inc.php
+          echo $i++; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['host']          = 'northwind-1.cki39k1nxe6r.us-west-1.rds.amazonaws.com'; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['port']          = '3306'; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['socket']        = ''; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['connect_type']  = 'tcp'; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['extension']     = 'mysql'; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['compress']      = FALSE; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['auth_type']     = 'config'; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['user']          = 'bmacarthur'; >> /etc/phpmyadmin/config.inc.php
+          echo $cfg['Servers'][$i]['password']      = 'phpmyadmin'; >> /etc/phpmyadmin/config.inc.php
   sgmycomputers:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
