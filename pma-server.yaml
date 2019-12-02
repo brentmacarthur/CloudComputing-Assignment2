@@ -1,61 +1,83 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'ES2 machine for pbpMyAdmin'
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "ES2 machine for pbpMyAdmin"
 Parameters:
   KeyName:
-    Description: 'Key Pair name'
-    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: "Key Pair name"
+    Type: "AWS::EC2::KeyPair::KeyName"
     Default: webserver
   VPC:
-    Description: 'Just select the one and only default VPC'
-    Type: 'AWS::EC2::VPC::Id'
-    Default: 'vpc-feb2a199'
-    AllowedValues: ['vpc-feb2a199']
+    Description: "Just select the one and only default VPC"
+    Type: "AWS::EC2::VPC::Id"
+    Default: "vpc-feb2a199"
+    AllowedValues: ["vpc-feb2a199"]
   Subnet:
-    Description: 'Just select one of the available subnets'
-    Type: 'AWS::EC2::Subnet::Id'
-    Default: 'subnet-0a889651'
-    AllowedValues: ['subnet-0a889651']
+    Description: "Just select one of the available subnets"
+    Type: "AWS::EC2::Subnet::Id"
+    Default: "subnet-0a889651"
+    AllowedValues: ["subnet-0a889651"]
   InstanceType:
     Description: Select one of the possible instance types'
     Type: String
-    Default: 't2.micro'
-    AllowedValues: ['t2.micro', 't2.small', 't2.medium']
+    Default: "t2.micro"
+    AllowedValues: ["t2.micro", "t2.small", "t2.medium"]
 Resources:
   EC2Instance:
-    Type: 'AWS::EC2::Instance'
+    Type: "AWS::EC2::Instance"
     Properties:
-      InstanceType: 't2.micro'
-      ImageId: 'ami-0dbf5ea29a7fc7e05'
+      InstanceType: "t2.micro"
+      ImageId: "ami-0dbf5ea29a7fc7e05"
       SecurityGroupIds:
-      - !Ref sgmycomputers
-      - !Ref sgwebserversec
+        - !Ref sgmycomputers
+        - !Ref sgwebserversec
       KeyName: !Ref KeyName
       SubnetId: !Ref Subnet
       NetworkInterfaces:
-      - SubnetId: !Ref Subnet
-        PrivateIpAddresses:
-        - PrivateIpAddress: '172.31.12.31'
-          Primary: 'true'
-        GroupSet:
-        - !Ref sgmycomputers
-        - !Ref sgwebserversec
-        AssociatePublicIpAddress: 'true'
+        - SubnetId: !Ref Subnet
+          PrivateIpAddresses:
+            - PrivateIpAddress: "172.31.12.31"
+              Primary: "true"
+          GroupSet:
+            - !Ref sgmycomputers
+            - !Ref sgwebserversec
+          AssociatePublicIpAddress: "true"
       UserData:
-        'Fn::Base64': !Sub |
+        "Fn::Base64": !Sub |
           #!/bin/bash -x
           export IPSEC_PSK="${IPSecSharedSecret}"
           export VPN_USER="${VPNUser}"
           export VPN_PASSWORD="${VPNPassword}"
           curl -s https://raw.githubusercontent.com/AWSinAction/code2/master/chapter05/vpn-setup.sh | bash -ex
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2Instance --region ${AWS::Region}
-  
+
   sgmycomputers:
-    Type: 'AWS::EC2::SecurityGroup'
+    Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: 'Created by RDS management console'
+      GroupDescription: "Created by RDS management console"
       VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "3306"
+          ToPort: "3306"
+          CidrIp: "0.0.0.0/0"
   sgwebserversec:
-    Type: 'AWS::EC2::SecurityGroup'
+    Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: 'webserver security'
+      GroupDescription: "webserver security"
       VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: "3306"
+          ToPort: "3306"
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: "443"
+          ToPort: "443"
+          CidrIp: "0.0.0.0/0"
