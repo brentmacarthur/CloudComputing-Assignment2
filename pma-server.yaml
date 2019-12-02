@@ -81,3 +81,7 @@ Resources:
           FromPort: "443"
           ToPort: "443"
           CidrIp: "0.0.0.0/0"
+Outputs:
+  ServerIP:
+    Description: "Public IP address of the vpn server"
+    Value: !GetAtt "EC2Instance.PublicIp"
