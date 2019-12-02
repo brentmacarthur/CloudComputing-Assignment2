@@ -4,7 +4,7 @@ Parameters:
   KeyName:
     Description: "Key Pair name"
     Type: "AWS::EC2::KeyPair::KeyName"
-    Default: webserver
+    Default: "webserver"
   VPC:
     Description: "Just select the one and only default VPC"
     Type: "AWS::EC2::VPC::Id"
