@@ -97,15 +97,15 @@ Resources:
               Service: "ec2.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-    Policies:
-      - PolicyName: ec2
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: "1"
-              Effect: Allow
-              Action: "ec2:*"
-              Resource: "*"
+      Policies:
+        - PolicyName: ec2
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: "1"
+                Effect: Allow
+                Action: "ec2:*"
+                Resource: "*"
 Outputs:
   ServerIP:
     Description: "Public IP address of the vpn server"
