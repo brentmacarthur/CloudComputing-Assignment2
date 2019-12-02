@@ -31,17 +31,6 @@ Resources:
         - !Ref sgwebserversec
       KeyName: !Ref KeyName
       SubnetId: !Ref Subnet
-      NetworkInterfaces:
-        - SubnetId: !Ref Subnet
-          DeleteOnTermination: "true"
-          DeviceIndex: "0"
-          PrivateIpAddresses:
-            - PrivateIpAddress: "172.31.12.31"
-              Primary: "true"
-          GroupSet:
-            - !Ref sgmycomputers
-            - !Ref sgwebserversec
-          AssociatePublicIpAddress: "true"
       UserData:
         # From https://github.com/andrewpuch/phpmyadmin_connect_to_rds
         "Fn::Base64": !Sub |
