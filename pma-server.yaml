@@ -27,7 +27,8 @@ Resources:
       InstanceType: 't2.micro'
       ImageId: 'ami-0dbf5ea29a7fc7e05'
       SecurityGroupIds:
-      - !Ref InstanceSecurityGroup
+      - !Ref sgmycomputers
+      - !Ref sgwebserversec
       KeyName: !Ref KeyName
       SubnetId: !Ref Subnet
       NetworkInterfaces:
@@ -47,17 +48,14 @@ Resources:
           export VPN_PASSWORD="${VPNPassword}"
           curl -s https://raw.githubusercontent.com/AWSinAction/code2/master/chapter05/vpn-setup.sh | bash -ex
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2Instance --region ${AWS::Region}
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT10M
   
-  InstanceSecurityGroup:
+  sgmycomputers:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: 'My security group'
+      GroupDescription: 'Created by RDS management console'
       VpcId: !Ref VPC
-      SecurityGroupIngress:
-      - CidrIp: '0.0.0.0/0'
-        FromPort: 22
-        IpProtocol: tcp
-        ToPort: 22
+  sgwebserversec:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'webserver security'
+      VpcId: !Ref VPC
