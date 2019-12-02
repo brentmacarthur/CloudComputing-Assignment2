@@ -13,9 +13,51 @@ Parameters:
   Subnet:
     Description: 'Just select one of the available subnets'
     Type: 'AWS::EC2::Subnet::Id'
+    Default: 'subnet-0a889651'
     AllowedValues: ['subnet-0a889651']
   InstanceType:
     Description: Select one of the possible instance types'
     Type: String
     Default: 't2.micro'
     AllowedValues: ['t2.micro', 't2.small', 't2.medium']
+Resources:
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: 't2.micro'
+      ImageId: 'ami-0dbf5ea29a7fc7e05'
+      SecurityGroupIds:
+      - !Ref InstanceSecurityGroup
+      KeyName: !Ref KeyName
+      SubnetId: !Ref Subnet
+      NetworkInterfaces:
+      - SubnetId: !Ref Subnet
+        PrivateIpAddresses:
+        - PrivateIpAddress: '172.31.12.31'
+          Primary: 'true'
+        GroupSet:
+        - !Ref sgmycomputers
+        - !Ref sgwebserversec
+        AssociatePublicIpAddress: 'true'
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -x
+          export IPSEC_PSK="${IPSecSharedSecret}"
+          export VPN_USER="${VPNUser}"
+          export VPN_PASSWORD="${VPNPassword}"
+          curl -s https://raw.githubusercontent.com/AWSinAction/code2/master/chapter05/vpn-setup.sh | bash -ex
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2Instance --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT10M
+  
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'My security group'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - CidrIp: '0.0.0.0/0'
+        FromPort: 22
+        IpProtocol: tcp
+        ToPort: 22
